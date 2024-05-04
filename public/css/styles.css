@@ -1,0 +1,21 @@
+body {
+    padding: 20px;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .form-row {
+    margin-bottom: 20px;
+  }
+  
+  #listaProductos {
+    margin-top: 20px;
+  }
+  
+  #carrito {
+    margin-top: 20px;
+  }
+  

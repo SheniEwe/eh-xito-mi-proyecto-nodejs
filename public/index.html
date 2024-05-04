@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplicación de productos</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    .navbar {
+      background-color: rgb(255, 219, 0); /* Color amarillo */
+      border-bottom: 5px solid #f3c40e; /* Color amarillo más oscuro */
+      height: 150px; /*  altura de la barra amarilla */
+    }
+
+    .navbar-brand {
+      margin-right: 0; /*  margen derecho */
+    }
+
+    .navbar-brand img {
+      width: auto; /*  tamaño del logo automáticamente */
+      height: 100%; /* altura del logo automáticamente */
+      margin-left: 20px; /* espacio del logo desde el borde izquierdo */
+    }
+
+    .carrito {
+      margin-right: 20px; /* Espacio entre el logo y el icono del carrito */
+      cursor: pointer; /* Cambia el cursor al pasar sobre el icono del carrito */
+      color: black; /* Color negro para el icono del carrito */
+    }
+
+    .carrito:hover {
+      color: #8B0000; /* Color rojo oscuro al pasar sobre el icono del carrito */
+    }
+  </style>
+</head>
+<body>
+
+<!-- Barra de navegación -->
+<nav class="navbar">
+  <div class="container">
+    <a class="navbar-brand" href="#">
+      <img src="/img/eh-xito_logo.png" alt="Logo de la tienda">
+    </a>
+    <a class="carrito" href="/carrito.html">
+      <i class="fas fa-shopping-cart fa-3x"></i>
+    </a>
+  </div>
+</nav>
+
+<div class="container">
+  <h1 class="mt-5">Bienvenido al éh-xito!!!</h1>
+
+<!-- Formulario para buscar y agregar productos -->
+<form id="formProducto" class="mt-3">
+  <div class="form-row">
+    <div class="form-group col-md-4">
+      <label for="nombre">Buscar por nombre</label>
+      <select class="form-control" id="nombre">
+        <option value="">Todos los productos</option>
+        <option value="Chocorramo">Chocorramo</option>
+        <option value="Gansito">Gansito</option>
+        <option value="Alquería entera x1 caja">Alquería entera x1 caja</option>
+        <option value="Bonyurt">Bonyurt</option>
+        <option value="Alpinito">Alpinito</option>
+      </select>
+    </div>
+    
+    <div class="form-group col-md-2">
+      <button type="submit" class="btn btn-agregar btn-block">Buscar producto</button>
+    </div>
+  </div>
+</form>
+
+
+<!-- Lista de productos -->
+<h2 class="mt-5">Nuestros productos !! a los mejores precios!!</h2>
+<div class="row" id="listaProductos">
+  <!-- Los productos se agregarán aquí dinámicamente -->
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Función para cargar los productos desde la API
+  function cargarProductos() {
+    fetch('/productos')
+      .then(response => response.json())
+      .then(productos => {
+        const listaProductos = document.getElementById('listaProductos');
+        listaProductos.innerHTML = '';
+        productos.forEach(producto => {
+          const div = document.createElement('div');
+          div.className = 'col-md-4 mb-4';
+          div.innerHTML = `
+            <div class="card">
+              <img src="${producto.imagen}" class="card-img-top" alt="${producto.nombre}">
+              <div class="card-body">
+                <h5 class="card-title">${producto.nombre}</h5>
+                <p class="card-text">$${producto.precio}</p>
+                <button class="btn btn-warning btn-block agregar-carrito" data-id="${producto.id}">Agregar al carrito</button>
+              </div>
+            </div>
+          `;
+          listaProductos.appendChild(div);
+        });
+      })
+      .catch(error => console.error('Error al cargar los productos:', error));
+  }
+  
+  // Cargar los productos cuando la página se cargue
+  document.addEventListener('DOMContentLoaded', function() {
+    cargarProductos();
+  });
+  
+  // Manejar el envío del formulario para buscar productos
+  document.getElementById('formProducto').addEventListener('submit', function(event) {
+    event.preventDefault();
+    filtrarProductos();
+  });
+  
+  // Función para filtrar productos
+  function filtrarProductos() {
+    const nombre = document.getElementById('nombre').value.toLowerCase();
+    const listaProductos = document.getElementById('listaProductos');
+  
+    fetch('/productos')
+      .then(response => response.json())
+      .then(productos => {
+        listaProductos.innerHTML = '';
+        productos.forEach(producto => {
+          if (nombre === '' || producto.nombre.toLowerCase().includes(nombre)) {
+            const div = document.createElement('div');
+            div.className = 'col-md-4 mb-4';
+            div.innerHTML = `
+              <div class="card">
+                <img src="${producto.imagen}" class="card-img-top" alt="${producto.nombre}">
+                <div class="card-body">
+                  <h5 class="card-title">${producto.nombre}</h5>
+                  <p class="card-text">$${producto.precio}</p>
+                  <button class="btn btn-warning btn-block agregar-carrito" data-id="${producto.id}">Agregar al carrito</button>
+                </div>
+              </div>
+            `;
+            listaProductos.appendChild(div);
+          }
+        });
+      })
+      .catch(error => console.error('Error al cargar los productos:', error));
+  }
+
+ // Manejar clics en botones "Agregar al carrito"
+ document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('agregar-carrito')) {
+      const id = event.target.getAttribute('data-id');
+      console.log('Agregar al carrito:', id);
+      agregarAlCarrito(id);
+    }
+  });
+
+  // Función para agregar productos al carrito
+  function agregarAlCarrito(idProducto) {
+    fetch('/agregar-al-carrito', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: idProducto })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data.message);
+    })
+    .catch(error => console.error('Error al agregar el producto al carrito:', error));
+  }
+
+
+
+//PRUEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAs
+// Obtener todos los productos
+  fetch('http://localhost:3000/productos')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Error en la solicitud');
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Productos:', data);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+
+
+
+
+
+// Agregar un nuevo producto
+app.post('/productos', (req, res) => {
+  const { nombre, precio, imagen } = req.body;
+  const nuevoProducto = new Producto({ nombre, precio, imagen });
+
+  nuevoProducto.save()
+    .then(producto => {
+      res.status(201).json(producto);
+    })
+    .catch(error => {
+      console.error('Error al agregar el producto:', error);
+      res.status(500).json({ message: 'Error interno del servidor' });
+    });
+});
+
+
+
+
+
+
+
+
+// Actualizar un producto existente
+app.put('/productos/:id', (req, res) => {
+  const idProducto = req.params.id;
+  const { nombre, precio, imagen } = req.body;
+
+  Producto.findByIdAndUpdate(idProducto, { nombre, precio, imagen }, { new: true })
+    .then(producto => {
+      if (!producto) {
+        return res.status(404).json({ message: 'Producto no encontrado' });
+      }
+      res.json(producto);
+    })
+    .catch(error => {
+      console.error('Error al actualizar el producto:', error);
+      res.status(500).json({ message: 'Error interno del servidor' });
+    });
+});
+
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
